@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ferrum Playground</title>
+<meta name="description" content="Send events, break the receiver, crash the worker, and watch Ferrum's delivery logic react. Runs in your browser.">
+<style>
+:root{--bg:#fff;--fg:#1c2330;--muted:#5b6575;--card:#f4f6fa;--line:#dde2ea;--accent:#2457d6;--code:#0f1623;--codefg:#d7e0f0;--ok:#157f3b;--warn:#a15c00;--bad:#c0262d;--okbg:#e3f5ea;--warnbg:#fff1d6;--badbg:#fde4e4;--infobg:#e6edfb}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1117;--fg:#e6ebf2;--muted:#9aa5b5;--card:#161c26;--line:#273040;--accent:#6f9bff;--code:#05080d;--codefg:#d7e0f0;--ok:#4cc27a;--warn:#e8a73a;--bad:#ff7b7f;--okbg:#10301d;--warnbg:#3a2a0b;--badbg:#3d1618;--infobg:#17233f}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:1060px;margin:0 auto;padding:28px 16px 64px}
+h1{font-size:1.7rem;margin:0 0 4px}h2{font-size:1rem;margin:0 0 10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+a{color:var(--accent)}.note{background:var(--infobg);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:14px 0;font-size:.92rem}
+.grid{display:grid;grid-template-columns:320px 1fr;gap:16px}@media(max-width:820px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+button{font:inherit;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:8px;padding:7px 12px;margin:0 6px 6px 0}
+button.alt{background:transparent;color:var(--accent)}button.danger{background:var(--bad);border-color:var(--bad)}button:disabled{opacity:.5;cursor:default}
+input[type=text],input[type=number],select{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 8px;max-width:100%}
+label{display:block;margin:4px 0}.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pipe{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;margin-bottom:14px}
+.pipe div.box{flex:1 1 120px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;text-align:center}
+.pipe b{display:block;font-size:1.3rem}.pipe small{color:var(--muted)}.pipe i{align-self:center;color:var(--muted);font-style:normal}
+table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.badge{display:inline-block;border-radius:999px;padding:1px 9px;font-size:.8rem;font-weight:600}
+.s-success,.k-ok{background:var(--okbg);color:var(--ok)}.s-dead_letter,.k-bad{background:var(--badbg);color:var(--bad)}
+.s-retrying,.k-warn{background:var(--warnbg);color:var(--warn)}.s-pending,.s-in_flight,.k-info{background:var(--infobg);color:var(--accent)}
+.chip{display:inline-block;font:12px ui-monospace,Menlo,monospace;border-radius:4px;padding:0 5px;margin-right:3px}
+.log{max-height:230px;overflow:auto;font:12.5px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--code);color:var(--codefg);border-radius:10px;padding:10px}
+.log div{margin:0 0 2px}.log .t{color:#8a97ab}.log .ok{color:#6fd391}.log .bad{color:#ff8b8f}.log .warn{color:#f0b95a}
+.valid{color:var(--ok);font-weight:600}.invalid{color:var(--bad);font-weight:600}.muted{color:var(--muted)}
+#what{font-size:.92rem;min-height:3em}
+</style></head><body><main>
+<p style="margin:0"><a href="./">&larr; Ferrum Sandbox</a></p>
+<h1>Ferrum Playground</h1>
+<p class="muted" style="margin:0">Send events, break the receiver, crash the worker, and watch the delivery logic react.</p>
+<div class="note"><b>What this is:</b> a model of Ferrum's delivery pipeline running in your browser, using the worker's real rules (5 attempts, 5 s &times; 2<sup>n-1</sup> backoff with &plusmn;20% jitter, 60 s lease, 90 s reclaim, signatures computed with real HMAC-SHA256). It is <b>not the real service</b>: no server or database is involved. To run the real thing, <a href="https://github.com/ferrum-webhooks/ferrum-sandbox#three-ways-to-try-it">fork the sandbox</a>. Time here is simulated, so use the speed control to skip waiting.</div>
+
+<div class="card"><h2>Start with a scenario</h2>
+<button class="alt" data-sc="retry">The receiver fails twice</button>
+<button class="alt" data-sc="dead">The receiver is down</button>
+<button class="alt" data-sc="crash">Crash the worker mid-delivery</button>
+<button class="alt" data-sc="burst">A burst of 15 events</button>
+<div id="what" class="muted">Pick a scenario, or use the controls below. Everything is reversible with Reset.</div></div>
+
+<div class="pipe" id="pipe"></div>
+
+<div class="grid">
+<div>
+  <div class="card"><h2>1. Send an event</h2>
+    <div class="row"><button id="send">Send event</button><button id="burst" class="alt">Send 15 at once</button></div>
+    <label>Idempotency key (optional) <input type="text" id="key" placeholder="order-42" size="14"></label>
+    <div class="muted" style="font-size:.85rem">Press Send twice with the same key: only one event is created.</div>
+  </div>
+  <div class="card"><h2>2. The receiver</h2>
+    <label><input type="radio" name="mode" value="ok" checked> Healthy (200)</label>
+    <label><input type="radio" name="mode" value="down"> Failing (500)</label>
+    <label><input type="radio" name="mode" value="failFirst"> Fails the first <input type="number" id="n" value="2" min="1" max="9" style="width:3.5em"> requests</label>
+    <label><input type="radio" name="mode" value="slow"> Too slow (times out after 5 s)</label>
+    <label><input type="checkbox" id="wrong"> Verifies with the wrong secret (signature check fails)</label>
+  </div>
+  <div class="card"><h2>3. The worker</h2>
+    <button id="kill" class="danger">Kill the worker (kill -9)</button><button id="start" class="alt" disabled>Start a new worker</button>
+    <div class="muted" style="font-size:.85rem">Kill it while a delivery is in flight (use the "too slow" receiver), then wait for recovery.</div>
+  </div>
+  <div class="card"><h2>Time</h2>
+    <div class="row"><select id="speed"><option value="1">Real time (1&times;)</option><option value="5" selected>5&times; faster</option><option value="20">20&times; faster</option><option value="0">Paused</option></select>
+    <button id="reset" class="alt">Reset</button></div>
+    <div class="muted" id="clock"></div>
+  </div>
+  <div class="card"><h2>Private-address check</h2>
+    <div class="row"><input type="text" id="url" value="http://169.254.169.254/latest/meta-data" size="26"><button id="chk" class="alt">Register</button></div>
+    <div id="urlres" class="muted" style="margin-top:6px">Try a cloud metadata address, localhost, or 10.0.0.5.</div>
+  </div>
+</div>
+<div>
+  <div class="card"><h2>Deliveries</h2><div id="deliveries" class="muted">Nothing sent yet.</div></div>
+  <div class="card"><h2>What the receiver saw</h2><div id="recv" class="muted">Nothing yet.</div></div>
+  <div class="card"><h2>Timeline</h2><div class="log" id="log"></div></div>
+</div>
+</div>
+</main>
+<script src="engine.js"></script>
+<script>
+(function () {
+  const { Ferrum, checkUrl } = FerrumModel;
+  let f = new Ferrum();
+  let speed = 5, busy = false, lastLog = 0;
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const what = (t) => { $("what").textContent = t; };
+  const chipClass = (code) => code >= 200 && code < 300 ? "k-ok" : "k-bad";
+
+  function render() {
+    const inflight = f.worker.attempts.length;
+    $("pipe").innerHTML =
+      `<div class="box"><b>${f.events.length}</b><small>events accepted</small></div><i>&rarr;</i>` +
+      `<div class="box"><b>${f.outbox.length}</b><small>waiting in outbox</small></div><i>&rarr;</i>` +
+      `<div class="box"><b>${f.stream.length}</b><small>in the queue</small></div><i>&rarr;</i>` +
+      `<div class="box"><b class="${f.worker.alive ? "valid" : "invalid"}">${f.worker.alive ? "running" : "dead"}</b><small>worker${inflight ? ` (${inflight} sending)` : ""}</small></div><i>&rarr;</i>` +
+      `<div class="box"><b>${f.receiver.log.length}</b><small>requests at receiver</small></div>`;
+    $("clock").textContent = `Simulated time: ${f.t.toFixed(1)} s`;
+    $("kill").disabled = !f.worker.alive; $("start").disabled = f.worker.alive;
+
+    const ds = f.deliveries.slice(-8).reverse();
+    $("deliveries").innerHTML = ds.length ? "<table><tr><th>Event</th><th>Status</th><th>Attempts</th><th></th></tr>" + ds.map((d) => {
+      const chips = d.attempts.map((a) => `<span class="chip ${chipClass(a.code)}">${a.code === null ? "timeout" : a.code}</span>`).join("");
+      let extra = "";
+      if (d.status === "retrying") extra = `next try in ${Math.max(0, d.nextRetryAt - f.t).toFixed(0)} s`;
+      if (d.status === "in_flight") extra = `lease ${Math.max(0, d.lockedUntil - f.t).toFixed(0)} s`;
+      if (d.status === "dead_letter" || d.status === "failed") extra = `<button class="alt" data-replay="${d.eventId}">Replay</button>`;
+      return `<tr><td><code>${esc(d.eventId)}</code></td><td><span class="badge s-${d.status}">${d.status}</span></td><td>${chips || "&ndash;"}</td><td class="muted">${extra}</td></tr>`;
+    }).join("") + "</table>" : "Nothing sent yet.";
+
+    const rs = f.receiver.log.slice(-6).reverse();
+    $("recv").innerHTML = rs.length ? "<table><tr><th>At</th><th>Event</th><th>Attempt</th><th>Signature</th><th>Answered</th></tr>" + rs.map((r) =>
+      `<tr><td>${r.t.toFixed(1)} s</td><td><code>${esc(r.event)}</code></td><td>${r.attempt}</td><td class="${r.sigOk ? "valid" : "invalid"}">${r.sigOk ? "VALID" : "INVALID"}</td><td>${r.code === null ? "(too slow)" : r.code}</td></tr>`).join("") + "</table>" : "Nothing yet.";
+
+    if (f.log.length !== lastLog) {
+      lastLog = f.log.length;
+      $("log").innerHTML = f.log.slice(-80).reverse().map((l) => `<div class="${l.kind}"><span class="t">${l.t.toFixed(1).padStart(6)} s</span>  ${esc(l.text)}</div>`).join("");
+    }
+  }
+
+  async function tick() {
+    if (busy || speed === 0) return;
+    busy = true;
+    try { await f.advance(0.1 * speed); } finally { busy = false; }
+    render();
+  }
+  setInterval(tick, 100);
+
+  function syncReceiver() {
+    const mode = document.querySelector("input[name=mode]:checked").value;
+    f.setReceiver({ mode, failFirst: Number($("n").value) || 2, wrongSecret: $("wrong").checked });
+  }
+  function setMode(mode) { document.querySelector(`input[name=mode][value=${mode}]`).checked = true; $("wrong").checked = false; syncReceiver(); }
+  function fresh() { f = new Ferrum(); lastLog = -1; setMode("ok"); }
+
+  document.querySelectorAll("input[name=mode],#n,#wrong").forEach((e) => e.addEventListener("change", () => { syncReceiver(); render(); }));
+  $("send").onclick = () => { syncReceiver(); f.send({ key: $("key").value.trim() }); render(); };
+  $("burst").onclick = () => { syncReceiver(); for (let i = 0; i < 15; i++) f.send(); render(); };
+  $("kill").onclick = () => { f.killWorker(); render(); };
+  $("start").onclick = () => { f.startWorker(); render(); };
+  $("speed").onchange = () => { speed = Number($("speed").value); };
+  $("reset").onclick = () => { fresh(); what("Reset. Everything is back to the start."); render(); };
+  $("deliveries").addEventListener("click", (e) => { const id = e.target.dataset && e.target.dataset.replay; if (id) { syncReceiver(); f.replay(id); render(); } });
+  $("chk").onclick = () => {
+    const r = checkUrl($("url").value.trim());
+    $("urlres").innerHTML = r.ok ? `<span class="valid">201 accepted</span>: this address is allowed.` : `<span class="invalid">422 rejected</span>: ${esc(r.detail)}`;
+  };
+
+  document.querySelectorAll("[data-sc]").forEach((b) => b.onclick = async () => {
+    const sc = b.dataset.sc;
+    fresh(); $("key").value = "";
+    if (sc === "retry") {
+      setMode("failFirst"); $("n").value = 2; syncReceiver(); f.send();
+      what("Watch the timeline: the first attempt gets a 500, the next comes about 5 s later, the third about 10 s after that, and it succeeds. Every attempt carries the same webhook-id, so a receiver can ignore repeats.");
+    } else if (sc === "dead") {
+      setMode("down"); f.send(); $("speed").value = "20"; speed = 20;
+      what("The receiver always answers 500. After 5 attempts (roughly 75 s of simulated time) the delivery is parked as dead_letter. Now switch the receiver to Healthy and press Replay.");
+    } else if (sc === "crash") {
+      setMode("slow"); f.send(); await f.advance(1); f.killWorker(); setMode("ok");
+      what("The worker died while sending, so nothing was recorded and the job is still held by its lease. Press \"Start a new worker\" and wait: after about 90 s of simulated time the new worker takes the abandoned job over and finishes it (use 20× speed). The receiver sees two attempts for one event.");
+      $("speed").value = "20"; speed = 20;
+    } else if (sc === "burst") {
+      for (let i = 0; i < 15; i++) f.send();
+      what("The limiter allows a burst of 10 and then refills 2 per second, so the last 5 get 429 Too Many Requests. The 10 accepted events are all delivered.");
+    }
+    render();
+  });
+
+  syncReceiver(); render();
+})();
+</script></body></html>

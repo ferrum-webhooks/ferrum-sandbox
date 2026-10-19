@@ -4,10 +4,11 @@ Try **Ferrum**, a service that delivers webhooks reliably, and follow a guided t
 
 [Project page](https://ferrum-webhooks.github.io/ferrum-sandbox/) · [Documentation](https://ferrum-webhooks.github.io/docs/)
 
-## Three ways to try it
+## Ways to try it
 
 | | How | Needs |
 |---|---|---|
+| **Play in your browser** | Open the [playground](https://ferrum-webhooks.github.io/ferrum-sandbox/play.html): send events, make the receiver fail, kill the worker, replay a dead letter. It is a model of the delivery rules (`site/engine.js`, tested in CI), not the real service | a browser |
 | **See a run, no setup** | Open the latest **Sandbox check** run in the [Actions tab](https://github.com/ferrum-webhooks/ferrum-sandbox/actions/workflows/ci.yml); the whole tour is printed in the run summary | nothing |
 | **Run it yourself in the browser** | [Fork this repository](https://github.com/ferrum-webhooks/ferrum-sandbox/fork) to your own account, then **Code → Codespaces → Create codespace on main**. It uses your personal free Codespaces allowance, not ours | a GitHub account |
 | **Run it on your computer** | `git clone`, install PostgreSQL, Redis, `jq` and Python 3.9 to 3.11, then the commands below | macOS or Linux |

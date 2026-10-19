@@ -23,8 +23,9 @@ a{color:var(--accent)}footer{margin-top:48px;color:var(--muted);font-size:.9rem}
 </style></head><body><main>
 <h1>Ferrum Sandbox</h1>
 <p class="lead">Ferrum delivers webhooks reliably: it never loses an event, retries failures, signs every message, and recovers from crashes. This sandbox lets you try all of that yourself in about five minutes. It costs you nothing and needs nothing installed.</p>
-<a class="btn" href="https://github.com/ferrum-webhooks/ferrum-sandbox/actions/workflows/ci.yml">See a recent run</a>
-<a class="btn" href="https://github.com/ferrum-webhooks/ferrum-sandbox/fork">Fork and run it</a>
+<a class="btn" href="play.html">Try it in your browser</a>
+<a class="btn alt" href="https://github.com/ferrum-webhooks/ferrum-sandbox/actions/workflows/ci.yml">See a real run</a>
+<a class="btn alt" href="https://github.com/ferrum-webhooks/ferrum-sandbox/fork">Fork and run the real thing</a>
 <a class="btn alt" href="https://github.com/ferrum-webhooks/ferrum-sandbox">View the repository</a>
 <a class="btn alt" href="https://ferrum-webhooks.github.io/docs/">Read the docs</a>
 
@@ -44,6 +45,7 @@ a{color:var(--accent)}footer{margin-top:48px;color:var(--muted);font-size:.9rem}
 
 <h2>Run it</h2>
 <div class="grid">
+<div class="card"><b>Play right now</b><span>The <a href="play.html">playground</a> runs in your browser: send events, break the receiver, kill the worker. It models the delivery rules; it is not the real service.</span></div>
 <div class="card"><b>Just look</b><span>Open the latest <a href="https://github.com/ferrum-webhooks/ferrum-sandbox/actions/workflows/ci.yml">Sandbox check</a> run; the whole tour is in its summary. Nothing to install.</span></div>
 <div class="card"><b>In your browser</b><span><a href="https://github.com/ferrum-webhooks/ferrum-sandbox/fork">Fork the repository</a>, then Code &rarr; Codespaces &rarr; Create. It uses your own free GitHub allowance.</span></div>
 <div class="card"><b>On your computer</b><span>Clone it, install PostgreSQL, Redis and jq, then <code>make setup up tour</code>.</span></div>
