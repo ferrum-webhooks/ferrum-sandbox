@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
   schedule:
     - cron: "0 6 * * 1"      # weekly: catches the sandbox breaking when the Ferrum repositories change
 
@@ -31,7 +32,13 @@ jobs:
       - name: End-to-end check
         run: make check
       - name: Guided tour (all 7 steps)
-        run: make tour
+        run: |
+          set -o pipefail
+          make tour 2>&1 | sed 's/\x1b\[[0-9;]*m//g' | tee tour.txt
+      - name: Show the tour in the run summary
+        if: always()
+        run: |
+          { echo '## Tour output'; echo '```'; cat tour.txt 2>/dev/null; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - name: Logs on failure
         if: failure()
         run: tail -n 50 /tmp/ferrum-bench/log/*.log

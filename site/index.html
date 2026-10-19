@@ -23,8 +23,10 @@ a{color:var(--accent)}footer{margin-top:48px;color:var(--muted);font-size:.9rem}
 </style></head><body><main>
 <h1>Ferrum Sandbox</h1>
 <p class="lead">Ferrum delivers webhooks reliably: it never loses an event, retries failures, signs every message, and recovers from crashes. This sandbox lets you try all of that yourself in about five minutes. It costs you nothing and needs nothing installed.</p>
-<a class="btn" href="https://codespaces.new/ferrum-webhooks/ferrum-sandbox">Open in GitHub Codespaces</a>
+<a class="btn" href="https://github.com/ferrum-webhooks/ferrum-sandbox/actions/workflows/ci.yml">See a recent run</a>
+<a class="btn" href="https://github.com/ferrum-webhooks/ferrum-sandbox/fork">Fork and run it</a>
 <a class="btn alt" href="https://github.com/ferrum-webhooks/ferrum-sandbox">View the repository</a>
+<a class="btn alt" href="https://ferrum-webhooks.github.io/docs/">Read the docs</a>
 
 <h2>How it works</h2>
 <div class="flow"><div>Your app</div><i>&rarr;</i><div>API (saves the event safely)</div><i>&rarr;</i><div>Database</div><i>&rarr;</i><div>Queue</div><i>&rarr;</i><div>Workers (send, sign, retry)</div><i>&rarr;</i><div>The receiver</div></div>
@@ -41,9 +43,12 @@ a{color:var(--accent)}footer{margin-top:48px;color:var(--muted);font-size:.9rem}
 </div>
 
 <h2>Run it</h2>
-<ol><li>Click <b>Open in GitHub Codespaces</b> (a free GitHub account is enough; the first start takes a few minutes).</li>
-<li>In the terminal: <code>make up</code>, then <code>make tour</code>.</li></ol>
-<p>Each visitor gets a private machine, so nothing you do affects anyone else.</p>
+<div class="grid">
+<div class="card"><b>Just look</b><span>Open the latest <a href="https://github.com/ferrum-webhooks/ferrum-sandbox/actions/workflows/ci.yml">Sandbox check</a> run; the whole tour is in its summary. Nothing to install.</span></div>
+<div class="card"><b>In your browser</b><span><a href="https://github.com/ferrum-webhooks/ferrum-sandbox/fork">Fork the repository</a>, then Code &rarr; Codespaces &rarr; Create. It uses your own free GitHub allowance.</span></div>
+<div class="card"><b>On your computer</b><span>Clone it, install PostgreSQL, Redis and jq, then <code>make setup up tour</code>.</span></div>
+</div>
+<p>Each option is a private copy, so nothing you do affects anyone else.</p>
 
 <h2>What the tour prints</h2>
 <p>Real output from one run of <code>make tour</code>:</p>
@@ -95,5 +100,5 @@ a{color:var(--accent)}footer{margin-top:48px;color:var(--muted);font-size:.9rem}
 
 <h2>Go deeper</h2>
 <p>Read the <a href="https://ferrum-webhooks.github.io/docs/">documentation</a> (how the delivery pipeline works, a connection-pool deadlock, measured performance). The code is in three repositories: <a href="https://github.com/ferrum-webhooks/ferrum-webhook-gateway">gateway</a>, <a href="https://github.com/ferrum-webhooks/ferrum-webhook-worker">worker</a>, <a href="https://github.com/ferrum-webhooks/infra">infra</a>.</p>
-<footer>MIT licensed. This sandbox runs in your own Codespace; this page is static and collects nothing.</footer>
+<footer>MIT licensed. Every copy of the sandbox is private to whoever runs it; this page is static and collects nothing.</footer>
 </main></body></html>

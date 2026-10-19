@@ -1,21 +1,33 @@
 # ferrum-sandbox
 
-Try **Ferrum**, a service that delivers webhooks reliably, without installing anything. Open it in a GitHub Codespace (free for personal accounts within GitHub's monthly allowance), start the system with one command, and follow a guided tour: signed deliveries, retries, a crashed worker, and more.
+Try **Ferrum**, a service that delivers webhooks reliably, and follow a guided tour: signed deliveries, retries, a crashed worker, and more. There is no shared server: every option below runs a private copy, so nothing you do affects anyone else, and none of them costs the project anything.
 
-**[Open in GitHub Codespaces](https://codespaces.new/ferrum-webhooks/ferrum-sandbox)** · [Project page](https://ferrum-webhooks.github.io/ferrum-sandbox/)
+[Project page](https://ferrum-webhooks.github.io/ferrum-sandbox/) · [Documentation](https://ferrum-webhooks.github.io/docs/)
 
-## Use it
+## Three ways to try it
 
-In the Codespace terminal:
+| | How | Needs |
+|---|---|---|
+| **See a run, no setup** | Open the latest **Sandbox check** run in the [Actions tab](https://github.com/ferrum-webhooks/ferrum-sandbox/actions/workflows/ci.yml); the whole tour is printed in the run summary | nothing |
+| **Run it yourself in the browser** | [Fork this repository](https://github.com/ferrum-webhooks/ferrum-sandbox/fork) to your own account, then **Code → Codespaces → Create codespace on main**. It uses your personal free Codespaces allowance, not ours | a GitHub account |
+| **Run it on your computer** | `git clone`, install PostgreSQL, Redis, `jq` and Python 3.9 to 3.11, then the commands below | macOS or Linux |
+
+You can also fork and press **Actions → Sandbox check → Run workflow** to run the tour on GitHub's machines (free for public repositories).
+
+## Commands
+
+In the Codespace (or any terminal in the repository):
 
 ```bash
+make setup    # download the three Ferrum repositories and install packages (once, about a minute)
 make up       # starts PostgreSQL, Redis, the API, a worker and a test receiver (about 10 seconds)
 make tour     # runs all 7 steps, about 1 minute; or one step: scripts/tour.sh 2
 make check    # the 13-point end-to-end check
 make down     # stop (make reset also deletes the data)
 ```
+(In a new Codespace, `make setup` has already run.)
 
-The API is at `http://127.0.0.1:8100` (Codespaces forwards the port). Create your own account and try the endpoints with `curl`; the [API reference](https://github.com/ferrum-webhooks/docs/api.md) lists them.
+The API is at `http://127.0.0.1:8100`. Create your own account and try the endpoints with `curl`; the [API reference](https://ferrum-webhooks.github.io/docs/api/) lists them.
 
 ## The tour
 
@@ -43,6 +55,6 @@ Nothing here is a copy of the application: `make setup` downloads the gateway, w
 
 ## Safe by design
 
-There is no shared server. Every visitor runs a private copy inside their own Codespace, so no one can reach anyone else's data, and nothing here makes outbound requests from a machine you pay for. The sandbox uses throwaway credentials that exist only inside the Codespace.
+There is no shared server. Every visitor runs a private copy (in their own Codespace, on GitHub's runners, or on their own computer), so no one can reach anyone else's data, and nothing here makes outbound requests from a machine the project pays for. The sandbox uses throwaway credentials that exist only inside that copy.
 
 MIT licensed.
