@@ -2,7 +2,7 @@
 
 Try **Ferrum**, a service that delivers webhooks reliably, without installing anything. Open it in a GitHub Codespace (free for personal accounts within GitHub's monthly allowance), start the system with one command, and follow a guided tour: signed deliveries, retries, a crashed worker, and more.
 
-**[Open in GitHub Codespaces](https://codespaces.new/pratishtha-abrol/ferrum-sandbox)** · [Project page](https://pratishtha-abrol.github.io/ferrum-sandbox/)
+**[Open in GitHub Codespaces](https://codespaces.new/ferrum-webhooks/ferrum-sandbox)** · [Project page](https://ferrum-webhooks.github.io/ferrum-sandbox/)
 
 ## Use it
 
@@ -15,7 +15,7 @@ make check    # the 13-point end-to-end check
 make down     # stop (make reset also deletes the data)
 ```
 
-The API is at `http://127.0.0.1:8100` (Codespaces forwards the port). Create your own account and try the endpoints with `curl`; the [API reference](https://github.com/pratishtha-abrol/ferrum/blob/main/docs/api.md) lists them.
+The API is at `http://127.0.0.1:8100` (Codespaces forwards the port). Create your own account and try the endpoints with `curl`; the [API reference](https://github.com/ferrum-webhooks/docs/api.md) lists them.
 
 ## The tour
 
