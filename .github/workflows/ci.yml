@@ -1,0 +1,37 @@
+name: Sandbox check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"      # weekly: catches the sandbox breaking when the Ferrum repositories change
+
+permissions:
+  contents: read
+
+jobs:
+  tour:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: System packages
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql postgresql-client redis-server jq lsof
+          sudo systemctl stop postgresql redis-server || true
+      - name: Set up
+        run: make setup
+      - name: Start
+        run: make up
+      - name: End-to-end check
+        run: make check
+      - name: Guided tour (all 7 steps)
+        run: make tour
+      - name: Logs on failure
+        if: failure()
+        run: tail -n 50 /tmp/ferrum-bench/log/*.log

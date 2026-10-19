@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ferrum Sandbox</title>
+<meta name="description" content="Try Ferrum, a reliable webhook delivery service, in your browser: signed deliveries, retries, crash recovery.">
+<style>
+:root{--bg:#fff;--fg:#1c2330;--muted:#5b6575;--card:#f4f6fa;--line:#dde2ea;--accent:#2457d6;--code:#0f1623;--codefg:#d7e0f0}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1117;--fg:#e6ebf2;--muted:#9aa5b5;--card:#161c26;--line:#273040;--accent:#6f9bff;--code:#05080d;--codefg:#d7e0f0}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:860px;margin:0 auto;padding:48px 16px 80px}
+h1{font-size:2.2rem;margin:0 0 8px}h2{margin:44px 0 12px;font-size:1.4rem}
+p.lead{font-size:1.15rem;color:var(--muted);margin:0 0 24px}
+.btn{display:inline-block;background:var(--accent);color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;margin:0 8px 8px 0}
+.btn.alt{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card b{display:block;margin-bottom:4px}.card span{color:var(--muted);font-size:.95rem}
+pre{background:var(--code);color:var(--codefg);padding:16px;border-radius:10px;overflow-x:auto;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace}
+code{font-family:ui-monospace,Menlo,Consolas,monospace}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+.flow div{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:.92rem}
+.flow i{color:var(--muted);font-style:normal}
+a{color:var(--accent)}footer{margin-top:48px;color:var(--muted);font-size:.9rem}
+</style></head><body><main>
+<h1>Ferrum Sandbox</h1>
+<p class="lead">Ferrum delivers webhooks reliably: it never loses an event, retries failures, signs every message, and recovers from crashes. This sandbox lets you try all of that yourself in about five minutes. It costs you nothing and needs nothing installed.</p>
+<a class="btn" href="https://codespaces.new/pratishtha-abrol/ferrum-sandbox">Open in GitHub Codespaces</a>
+<a class="btn alt" href="https://github.com/pratishtha-abrol/ferrum-sandbox">View the repository</a>
+
+<h2>How it works</h2>
+<div class="flow"><div>Your app</div><i>&rarr;</i><div>API (saves the event safely)</div><i>&rarr;</i><div>Database</div><i>&rarr;</i><div>Queue</div><i>&rarr;</i><div>Workers (send, sign, retry)</div><i>&rarr;</i><div>The receiver</div></div>
+<p>The event and its delivery jobs are saved in one database step, so an accepted event cannot be lost. Workers take jobs from a queue and record the result. If a worker dies, another one finishes its job.</p>
+
+<h2>What you can try</h2>
+<div class="grid">
+<div class="card"><b>1. Signed delivery</b><span>Send an event; the receiver verifies its signature.</span></div>
+<div class="card"><b>2. Retries</b><span>Make the receiver fail; watch attempts at 5 s and 10 s.</span></div>
+<div class="card"><b>3. Dead letter and replay</b><span>Let a delivery give up, then re-send it.</span></div>
+<div class="card"><b>4. Duplicate requests</b><span>Press send three times; one event is created.</span></div>
+<div class="card"><b>5. Worker crash</b><span>Kill the worker mid-delivery; another finishes the job.</span></div>
+<div class="card"><b>6. Private addresses</b><span>Webhook URLs aimed at internal networks are refused.</span></div>
+</div>
+
+<h2>Run it</h2>
+<ol><li>Click <b>Open in GitHub Codespaces</b> (a free GitHub account is enough; the first start takes a few minutes).</li>
+<li>In the terminal: <code>make up</code>, then <code>make tour</code>.</li></ol>
+<p>Each visitor gets a private machine, so nothing you do affects anyone else.</p>
+
+<h2>What the tour prints</h2>
+<p>Real output from one run of <code>make tour</code>:</p>
+<pre>== 1. Send an event and receive a signed delivery
+   The receiver checks the signature with the webhook&#x27;s secret.
+   sent event evt_a7b3a2824d7f86b24b3021a9217045b7
+   receiver: [13:19:30] #1 POST /hook -&gt; 200   id=evt_a7b3a2824d7f86b24b3021a9217045b7 (seen 1x)  signature=VALID  ts_age=0.8s
+   Ferrum&#x27;s own record:
+   {&quot;status&quot;:&quot;success&quot;,&quot;attempts&quot;:[{&quot;response_code&quot;:200,&quot;latency_ms&quot;:3}]}
+
+== 2. The receiver fails twice: watch the retries
+   Retries wait 5 s, then 10 s (stored in the database, not in a sleeping worker). Takes about 20 s.
+   receiver: [13:19:31] #1 POST /hook -&gt; 500   id=evt_dc0065b371f55276f5f2a5b905b4f064 (seen 1x)  signature=VALID  ts_age=0.7s
+   receiver: [13:19:37] #2 POST /hook -&gt; 500   id=evt_dc0065b371f55276f5f2a5b905b4f064 (seen 2x)  signature=VALID  ts_age=0.0s
+   receiver: [13:19:49] #3 POST /hook -&gt; 200   id=evt_dc0065b371f55276f5f2a5b905b4f064 (seen 3x)  signature=VALID  ts_age=0.3s
+   Same message id every time, so a receiver can ignore repeats.
+
+== 3. The receiver stays broken: give up, then replay
+   Using 1-second retry timers for this step so it takes about 20 s instead of 75 s.
+   After 5 failed attempts the delivery is parked as dead_letter:
+   {&quot;status&quot;:&quot;dead_letter&quot;,&quot;attempts&quot;:[500,500,500,500,500]}
+   The receiver is fixed. Replaying:
+   {&quot;event_id&quot;:&quot;evt_32e27ea9ed12ffe59765deb434585a1b&quot;,&quot;replayed_deliveries&quot;:1}
+   status is now: success
+
+== 4. Sending the same request three times counts once
+   status codes: 202 200 200   (202 = accepted, 200 = already seen)
+   same key, different body: 422   (422 = refused)
+   one event, one delivery: the receiver got 1 POST
+
+== 5. Crash the worker in the middle of a delivery
+   The receiver holds the first request for 30 s, so the delivery is &#x27;in flight&#x27;. Short recovery timers are used.
+   killing the worker with kill -9
+   a new worker finished it 3 s after the crash. The receiver saw two attempts: the abandoned one and the recovered one:
+   receiver: [13:20:37] #1 POST /hook -&gt; 200   id=evt_acd9f2c915e7b0e1f4379391f6e683ec (seen 1x)  signature=VALID  ts_age=0.1s
+   receiver: [13:20:41] #2 POST /hook -&gt; 200   id=evt_acd9f2c915e7b0e1f4379391f6e683ec (seen 2x)  signature=VALID  ts_age=0.2s
+
+== 6. Webhook URLs pointing at private addresses are refused
+   http://169.254.169.254/      &quot;Webhook URL rejected: target address is not publicly routable&quot;
+   http://127.0.0.1:6379/       &quot;Webhook URL rejected: target address is not publicly routable&quot;
+   http://10.0.0.5/             &quot;Webhook URL rejected: target address is not publicly routable&quot;
+   http://localhost/            &quot;Webhook URL rejected: internal hostnames are not allowed&quot;
+
+== 7. Rate limit
+   8 quick requests: 200 200 200 200 200 429 429 429   (429 = slow down)
+
+== Done.
+</pre>
+
+<h2>Go deeper</h2>
+<p>The code and the engineering write-ups (how the delivery pipeline works, a connection-pool deadlock, measured performance) are in the three Ferrum repositories: <a href="https://github.com/pratishtha-abrol/ferrum-webhook-gateway">gateway</a>, <a href="https://github.com/pratishtha-abrol/ferrum-webhook-worker">worker</a>, <a href="https://github.com/pratishtha-abrol/infra">infra</a>.</p>
+<footer>MIT licensed. This sandbox runs in your own Codespace; this page is static and collects nothing.</footer>
+</main></body></html>
